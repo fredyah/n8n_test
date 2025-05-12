@@ -1,0 +1,495 @@
+{
+  "name": "mars-helper",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mars-line-message",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        -640
+      ],
+      "id": "7144f234-6260-4593-8558-e3505822b3ed",
+      "name": "Webhook",
+      "webhookId": "631564bf-35e4-42c8-8ea1-0c2e8088ed73"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一位幽默的辦公室小助手，隸屬於火星人福氣金鑛股份有限公司，你的名字是「火星7號」。\n請根據以下資訊回答問題。如果內容無法涵蓋問題，請誠實說明你查無資料，不要假裝知道。\n今天是 {{$now}}（{{ new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', weekday: 'long' }).format($now) }}）\n\n【問題】\n{{ $json.questions.replace(/[@#]/g, '') }}\n\n【檢索資料】\n{{ $json.qdrantdata }}\n\n## 僅使用上方「檢索資料」內容進行回答，但不要提到「檢索資料」這4個字，以繁體中文，純文字輸出，不要帶html。",
+        "options": {
+          "systemMessage": "=你是一位幽默、貼心又性感的聊天高手 Vin Diesel。\n請根據以下資訊回答問題。如果內容無法涵蓋問題，請誠實說明你查無資料，不要假裝知道。\n今天是 {{$now}}（{{ new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', weekday: 'long' }).format($now) }}）\n\n【問題】\n{{ $json.questions.replace(/[@#]/g, '') }}\n\n【檢索資料】\n{{ $json.qdrantdata }}\n\n## 僅使用上方「檢索資料」內容進行回答，但不要提到「檢索資料」這4個字，以繁體中文，純文字輸出，不要帶html。",
+          "maxIterations": 5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        520,
+        -360
+      ],
+      "id": "d929100a-aceb-41c5-9135-90420805748b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        460,
+        60
+      ],
+      "id": "bc3b5bf6-249a-45e7-87ca-f7ce46ec9a1e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "0pmZefVpk6MN0Vks",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        880,
+        -520
+      ],
+      "id": "97da23a6-c1ad-4dac-88ac-4f690a734a49",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const replyTokenItem = items.find(item => item.json.body?.events?.[0].replyToken);\nconst outputItem = items.find(item => item.json.response) || items.find(item => item.json.output);\nif (!replyTokenItem || !outputItem) {\n    throw new Error(\"缺少必要數據，請檢查 Webhook && AI Agent 節點輸出\");\n}\n\nconst replyToken = replyTokenItem.json.body.events[0].replyToken;\n\nconst rawText = outputItem.json.response || outputItem.json.output || '';\nconst text = rawText.trim().replace(/\\n/g, '\\\\n').replace(/\"/g, '\\\\\"');\n\nreturn [\n    {\n        json: {\n            replyToken: replyToken,\n            text: text\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        -260
+      ],
+      "id": "cefc7d27-0b5f-4412-9208-a3cdd648842f",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"replyToken\": \"{{ $json.replyToken }}\",\n    \"messages\": [\n        {\n            \"type\": \"text\",\n            \"text\": \"{{ $json.text }}\"\n        }\n    ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        -20
+      ],
+      "id": "43f80d6a-4b27-403c-bdb3-f637a3f308ce",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SkaADsDfMF9XX7Jq",
+          "name": "myLineBotBearer"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.userid }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        100
+      ],
+      "id": "a3fbf791-9f6e-44aa-b667-a98f30018844",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "i1WVMNumc9Djzm8x",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        260,
+        -400
+      ],
+      "id": "1ababeac-9b37-428b-80d2-06d3f463f540",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n\nreturn {\n  json: {\n    text: $json.body.events[0].message.text.replace(/[@#]/g, '')\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        -300
+      ],
+      "id": "6ba38eae-d5d4-4f95-ac64-2825f8d7f02b",
+      "name": "get User Question"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyC1Cq2j5iRq7gEX-aJquK9zJbiJPTNDOMI",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\": \"models/text-embedding-004\",\n   \"content\": {\n     \"parts\":[{\n       \"text\": \"{{ $json.text }}\"}]}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -260,
+        -80
+      ],
+      "id": "956cd7b9-31c6-45db-9257-fe3cebba8fa7",
+      "name": "Question2Vector"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.3:6333/collections/fredtest/points/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"vector\": [{{$json[\"embedding\"][\"values\"]}}],\n  \"top\": 10,\n  \"with_payload\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -20,
+        -300
+      ],
+      "id": "7b10546d-7799-4826-9963-2c41b4537e65",
+      "name": "Search From Qdrant"
+    },
+    {
+      "parameters": {
+        "jsCode": "const contexts = $json.result.map(\n  (item, i) => `【${i+1}】${item.payload.content}`\n).join('\\n\\n');\n\nif (!contexts || contexts.trim() === '') {\n  return { context: \"查無內容，請使用 MCP client tool 處理\" };\n}\n\nreturn { context: contexts };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -60
+      ],
+      "id": "858b07a3-77e0-47e3-81db-de5b69686f73",
+      "name": "Merge Date From Qdrant"
+    },
+    {
+      "parameters": {
+        "jsCode": "const qdrantdataItem = items.find(item => item.json.context);\nconst questionsItem = items.find(item => item.json.body?.events?.[0].message.text);\nconst useridItem = items.find(item => item.json.body?.events?.[0].source.userId);\nif (!qdrantdataItem || !questionsItem) {\n    throw new Error(\"缺少必要數據，請檢查 Webhook && AI Agent 節點輸出\");\n}\n\nconst questions = questionsItem.json.body.events[0].message.text;\nconst qdrantdata = qdrantdataItem.json.context;\nconst userid = useridItem.json.body.events[0].source.userId\n\nreturn [\n    {\n        json: {\n          questions: questions,\n          qdrantdata: qdrantdata,\n          userid: userid\n        }\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        -140
+      ],
+      "id": "cc22f215-47f8-4c29-ac69-cd0829e0bbad",
+      "name": "get UserID Question QdrantData"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0ab75ecc-b88c-4dd2-a614-6cacf8c3619f",
+              "leftValue": "={{ $json.body.events[0].message.text }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -340,
+        -640
+      ],
+      "id": "d6d9ba9a-ba47-4b68-880e-52251ce5de6f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://172.17.0.1:5678/mcp/2b1f8019-27e7-4980-9f2a-8158848e89aa/sse"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        660,
+        20
+      ],
+      "id": "521dfe00-968f-4fe2-976e-d6b8ce3b5e03",
+      "name": "MCP Client"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "211.75.130.59",
+            "x-forwarded-for": "211.75.130.59",
+            "x-forwarded-proto": "https",
+            "host": "n8n.qas.intra.mars-deg.com",
+            "connection": "upgrade",
+            "content-length": "76",
+            "user-agent": "curl/7.81.0",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "events": [
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "你是誰"
+                }
+              }
+            ]
+          },
+          "webhookUrl": "http://0.0.0.0:5678/webhook/mars-line-message",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "get UserID Question QdrantData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get User Question": {
+      "main": [
+        [
+          {
+            "node": "Question2Vector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question2Vector": {
+      "main": [
+        [
+          {
+            "node": "Search From Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search From Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Merge Date From Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Date From Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "get UserID Question QdrantData": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "get User Question",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6aefa049-75d3-4769-8d02-14b022dae9f0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d48a6c213f1c63937f899cab0405eb1edb93945f6df55cbc3edf8e6d96d44e9d"
+  },
+  "id": "MgoYbpumTwwk0ZR5",
+  "tags": []
+}

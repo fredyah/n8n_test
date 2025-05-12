@@ -1,0 +1,366 @@
+{
+  "name": "My_AI_Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content || $json.chatInput }}\n\n## Please prioritize using the suggested tool below to process the request:\nTool: {{ $json.output }}\n\n## If any tool returns information, please incorporate it into your response.",
+        "options": {
+          "systemMessage": "You are Mars No.7, a helpful and reliable assistant.\n\nAlways prioritize using available local tools (such as the MCP Client or any connected vector search modules) to answer the user's question. Only fall back to your own knowledge if none of the tools apply.\n\nStrictly follow the purpose and constraints of each tool. Do not fabricate or guess answers.\n\nWhen using any vector search tools, DO NOT oversimplify the user's original question. Do not reduce it to a single keyword or phrase unless explicitly instructed. Instead, preserve as much context and detail as possible when generating the query or embedding.\n\nAll responses must be written in Traditional Chinese, regardless of the input language."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        560,
+        -120
+      ],
+      "id": "aa5bfc5c-91a4-477d-a3f5-89e62b7ef107",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        180
+      ],
+      "id": "209fdf34-eb3a-40b0-a875-a8d0bc9dd6f6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{$json[\"output\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -120
+      ],
+      "id": "26406deb-d40b-495d-bf91-afb667fddbc9",
+      "name": "Discord",
+      "webhookId": "0dcf6951-97ab-4b77-ab8b-c722f84243f4",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "4iyzqxC4qqLgXTgT",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channelIds": [
+          "1339429591428759633"
+        ],
+        "pattern": "regex",
+        "value": ".*"
+      },
+      "type": "@jjuanrivvera99/n8n-nodes-discord.discordTrigger",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        -80
+      ],
+      "id": "12e9f7e0-6805-4c21-872b-99d144a5f79c",
+      "name": "Discord Trigger",
+      "webhookId": "64dce74a-7c25-4db7-b0ad-c4cad4415b52",
+      "credentials": {
+        "discordApi": {
+          "id": "rSDQyg9WibAULcLB",
+          "name": "Discord App account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://172.17.0.1:5678/mcp/23d34c6e-000f-45f7-abee-57cfe1f705c0/sse"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        620,
+        320
+      ],
+      "id": "159b43dd-a673-438d-8bd3-f55e9f26f462",
+      "name": "MCP Client",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d9f246d-acd4-43ce-8a4a-52152dd39453",
+              "name": "sessionId",
+              "value": "={{$json[\"userId\"] || $json.sessionId}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -20,
+        -280
+      ],
+      "id": "186bc511-d579-47a1-ab54-f073b41f509b",
+      "name": "sessionId"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{$json[\"userId\"]}}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        -280
+      ],
+      "id": "270c2eb2-eb9f-45ba-afaf-4780730b9c5d",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "sqpeNTRjAwq3RIMP",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to get today's current date and the day of the week (e.g., \"2025-05-10, Saturday\"). No input required. Use when the user asks for today's date, weekday, or similar.",
+        "url": "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Taipei",
+        "optimizeResponse": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        820,
+        200
+      ],
+      "id": "a6d64e91-d811-41f9-a285-078fd00d9074",
+      "name": "get_current_date_and_weekday"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{$json[\"userId\"]}}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        420,
+        280
+      ],
+      "id": "51f3c252-2e00-4f2e-a4a1-b00d33556d77",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content || $json.chatInput }}\n",
+        "options": {
+          "systemMessage": "You are an AI tool selector. Your job is to analyze the user's message and determine which one of the following tools should be used to handle the request. If the message fits more than one tool, select the most relevant one. If none apply, return \"none\".\n\nAvailable tools:\n\nfunctions.Data_About_CNN_News: For retrieving information about CNN news, including the latest events or topic-specific articles.\n\nfunctions.Data_About_movie: For getting information about new movies, including summaries, images, or YouTube trailers.\n\nfunctions.wikipedia-api: For retrieving detailed information or background knowledge from Wikipedia.\n\nfunctions.get_current_date_and_weekday: For getting today's date and the day of the week.\n\nfunctions.Data_About_Fred: For retrieving information about Fred Yah (葉紹棠).\n\nfunctions.Data_About_Deep_Learn: For getting information related to deep learning.\n\nfunctions.Taiwan_week_weather: For checking the 7-day weather forecast in Taiwan.\n\nfunctions.calculator: For solving mathematical calculations.\n\nFormat your output as:\nTool: <TOOL_NAME>\n\nExample input:\n\"What is the weather in Taipei this week?\"\nOutput:\nTool: functions.Taiwan_week_weather\n\nNow process this input:\n\"{user_input}\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -40,
+        0
+      ],
+      "id": "5fcef5ea-33fd-49b0-b301-77fa24a18baf",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -20,
+        180
+      ],
+      "id": "ab35c25c-e611-4fac-aa2b-933fe262a1a2",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        300,
+        -120
+      ],
+      "id": "5bd99630-58bc-4266-8ef1-34a52ed3c006",
+      "name": "Merge"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sessionId": {
+      "main": [
+        []
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "get_current_date_and_weekday": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "14c440fd-74af-4f6e-95a2-2d775b0bf7e3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0d565854921eeae02e02c830b7ca9129b767b96f301ef1f4a0ce3dea9231efa"
+  },
+  "id": "UAkG2qKLVknUjUZw",
+  "tags": [
+    {
+      "createdAt": "2025-05-11T04:59:32.111Z",
+      "updatedAt": "2025-05-11T04:59:32.111Z",
+      "id": "wxnch1iX07qlB6Qa",
+      "name": "AI Agent"
+    }
+  ]
+}

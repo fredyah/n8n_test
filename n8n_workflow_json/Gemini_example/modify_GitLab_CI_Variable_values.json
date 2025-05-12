@@ -1,0 +1,424 @@
+{
+  "name": "modify GitLab CI Variable values",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        120
+      ],
+      "id": "399227e8-413f-4379-9c12-cc6b581b6c7b",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://gitlab.intra.mars-deg.com/api/v4/projects?simple=true&per_page=100&page=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "PRIVATE-TOKEN",
+              "value": "zRxgsrGM1dwHDbBqCdRS"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        -40
+      ],
+      "id": "a43582d6-9424-45ec-9fe1-e0c2c2934b38",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "projectID = [\n    [item[\"json\"][\"path_with_namespace\"], item[\"json\"][\"id\"]]\n    for item in items\n    if \"wanhow/backend\" in item[\"json\"][\"path_with_namespace\"] or \"ai_backend\" in item[\"json\"][\"path_with_namespace\"] or \"mars-tickets/backend\" in item[\"json\"][\"path_with_namespace\"]\n]\nreturn [{\"json\": {\"id\": p[1], \"path\": p[0]}} for p in projectID]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        120
+      ],
+      "id": "48a36928-c988-4f63-89d0-d56a50b53628",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "url": "https://gitlab.intra.mars-deg.com/api/v4/projects?simple=true&per_page=100&page=2",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "PRIVATE-TOKEN",
+              "value": "zRxgsrGM1dwHDbBqCdRS"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        140
+      ],
+      "id": "2c490076-7a00-4348-b162-07c2c5761107",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        120
+      ],
+      "id": "824a2d36-b4fb-4102-86c1-d977871ead28",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "url": "https://gitlab.intra.mars-deg.com/api/v4/projects?simple=true&per_page=100&page=3",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "PRIVATE-TOKEN",
+              "value": "zRxgsrGM1dwHDbBqCdRS"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        380,
+        340
+      ],
+      "id": "ef1482c1-0e89-46b5-9629-8123210bf27c",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        120
+      ],
+      "id": "bd21a872-6114-4739-888a-5de9be2ed97e",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://gitlab.intra.mars-deg.com/api/v4/projects/{{ $json.id }}/variables/PROD_KUBE_ACCESS_KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "PRIVATE-TOKEN",
+              "value": "zRxgsrGM1dwHDbBqCdRS"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "value",
+              "value": "token-5c7h6"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        220
+      ],
+      "id": "cc46e144-aaab-45b7-abdc-c7a146a1b695",
+      "name": "HTTP Request3",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2020,
+        220
+      ],
+      "id": "3e44c2fe-6f43-4fdf-8b9c-c572862725fe",
+      "name": "Wait",
+      "webhookId": "f0091316-6637-4dd7-933a-572b614367ab"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://gitlab.intra.mars-deg.com/api/v4/projects/{{ $json.id }}/variables/PROD_KUBE_SECRET_KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "PRIVATE-TOKEN",
+              "value": "zRxgsrGM1dwHDbBqCdRS"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "value",
+              "value": "ssxsd68h9w5cw9lfr6fz5n5s5qt89sk2wj9pp7jfv8ldbk2m4r5v4b"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1780,
+        540
+      ],
+      "id": "c3985dbe-90cd-4902-bf6c-5624bb6d7225",
+      "name": "HTTP Request4",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        540
+      ],
+      "id": "e3e73ed4-b14e-4ce3-aa7d-58fbe8d89b14",
+      "name": "Wait1",
+      "webhookId": "f0091316-6637-4dd7-933a-572b614367ab"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1560,
+        460
+      ],
+      "id": "ed43f1a5-e94a-42f3-9152-b32e44586c5c",
+      "name": "Loop Over for K8s P Secret Key"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1580,
+        120
+      ],
+      "id": "3636394a-38d7-4972-981b-dee6472c3edc",
+      "name": "Loop Over for K8s P Access Key"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over for K8s P Access Key",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over for K8s P Secret Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over for K8s P Access Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over for K8s P Secret Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over for K8s P Secret Key": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over for K8s P Access Key": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "257eeb81-415b-4d75-9e67-85b28f338aeb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d48a6c213f1c63937f899cab0405eb1edb93945f6df55cbc3edf8e6d96d44e9d"
+  },
+  "id": "nCALjMvDp1LGz7Y2",
+  "tags": []
+}

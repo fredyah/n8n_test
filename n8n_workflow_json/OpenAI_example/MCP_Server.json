@@ -1,0 +1,657 @@
+{
+  "name": "MCP_Server",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "23d34c6e-000f-45f7-abee-57cfe1f705c0"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -60
+      ],
+      "id": "3fc49968-3480-467f-80e0-f2d08452c18d",
+      "name": "MCP Server Trigger",
+      "webhookId": "23d34c6e-000f-45f7-abee-57cfe1f705c0",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        220
+      ],
+      "id": "916dec3d-834f-4bfd-a60e-d73ecd6243d0",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get the Taiwan week weather forecast. Provide only the city name",
+        "url": "http://172.17.0.1:8000/get_weather",
+        "sendQuery": true,
+        "parametersQuery": {
+          "values": [
+            {
+              "name": "input"
+            }
+          ]
+        },
+        "optimizeResponse": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -200,
+        460
+      ],
+      "id": "b58bdada-4c7d-4b4b-b239-1fc2c4620c16",
+      "name": "Taiwan week weather"
+    },
+    {
+      "parameters": {
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "deeplearn",
+          "mode": "list",
+          "cachedResultName": "deeplearn"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        520
+      ],
+      "id": "74fba72a-01c4-450a-87eb-fb5f1ef04397",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "iY6Lwsmku9xQdACG",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        680
+      ],
+      "id": "181c4f39-31dc-45b6-b2f2-82a843e16cde",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        520
+      ],
+      "id": "f2525844-926a-4028-8b56-c420b90eb773",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "Data_About_Deep_Learn",
+        "description": "Data about Deep Learn",
+        "topK": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        300,
+        320
+      ],
+      "id": "cf2fab3b-0330-425a-a834-34051da5b32c",
+      "name": "about Deep Learn"
+    },
+    {
+      "parameters": {
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "fred",
+          "mode": "list",
+          "cachedResultName": "fred"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        820,
+        500
+      ],
+      "id": "725e60b9-fbe3-4a6b-bccc-358b696bae8d",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "iY6Lwsmku9xQdACG",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        700
+      ],
+      "id": "26625492-b48e-4f09-964e-9f69e76a180b",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1160,
+        640
+      ],
+      "id": "d0a9b77e-83bd-4763-a969-759d627fd21f",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "Data_About_Fred",
+        "description": "Data about Fred Yah (葉紹棠)",
+        "topK": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        920,
+        300
+      ],
+      "id": "f654a606-bcc0-4f75-9bb5-7369fa47d31a",
+      "name": "about Fred"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to get today's current date and the day of the week (e.g., \"2025-05-10, Saturday\"). No input required. Use when the user asks for today's date, weekday, or similar.",
+        "url": "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Taipei",
+        "optimizeResponse": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        440
+      ],
+      "id": "0cdf9150-4ba3-4de0-96d8-96c66d8d1d01",
+      "name": "get_current_date_and_weekday"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        340
+      ],
+      "id": "c3416836-9e08-4686-a4ed-7bbb8624ddc4",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "movie",
+          "mode": "list",
+          "cachedResultName": "movie"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        540
+      ],
+      "id": "648d6f51-9201-4fba-a9ac-61db123cf1a7",
+      "name": "Qdrant Vector Store2",
+      "credentials": {
+        "qdrantApi": {
+          "id": "iY6Lwsmku9xQdACG",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        740
+      ],
+      "id": "1140b285-3399-47c6-9195-cf660dce6fff",
+      "name": "Embeddings OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1780,
+        620
+      ],
+      "id": "279c23a4-53ce-4e85-8ef9-58ccec4d072c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "Data_About_movie",
+        "description": "Data about new movies introduction, picture url, youtube link",
+        "topK": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        220
+      ],
+      "id": "6e3f388d-1530-4c4c-a357-e8bced42eff8",
+      "name": "about movie"
+    },
+    {
+      "parameters": {
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "cnnnews",
+          "mode": "list",
+          "cachedResultName": "cnnnews"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        1940,
+        400
+      ],
+      "id": "21f0ae28-ef84-47d2-a08b-62ad11438861",
+      "name": "Qdrant Vector Store3",
+      "credentials": {
+        "qdrantApi": {
+          "id": "iY6Lwsmku9xQdACG",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1940,
+        600
+      ],
+      "id": "60c593fc-6bf2-4c00-8490-9da308525b96",
+      "name": "Embeddings OpenAI3",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2360,
+        480
+      ],
+      "id": "606af94d-fae3-4719-99c6-d4dff8e07bda",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "Data_About_CNN_News",
+        "description": "Data about CNN News",
+        "topK": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        80
+      ],
+      "id": "dbfed22f-70a5-4295-93eb-6b6c9bb7624b",
+      "name": "about CNN News"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "about Deep Learn",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "about Deep Learn",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "about Fred",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "about Fred",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Taiwan week weather": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "about Deep Learn": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "about Fred": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_current_date_and_weekday": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store2": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "about movie",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "about movie",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "about movie": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store3": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "about CNN News",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI3": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store3",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "about CNN News",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "about CNN News": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "21f7fc8c-c55a-44b3-ad49-466a46f68758",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0d565854921eeae02e02c830b7ca9129b767b96f301ef1f4a0ce3dea9231efa"
+  },
+  "id": "MhuiElqPLPknVBfw",
+  "tags": [
+    {
+      "createdAt": "2025-05-11T05:00:27.695Z",
+      "updatedAt": "2025-05-11T05:00:27.695Z",
+      "id": "VY9gLwxGH28VHRDO",
+      "name": "Server"
+    }
+  ]
+}

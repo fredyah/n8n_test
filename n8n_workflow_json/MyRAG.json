@@ -1,0 +1,179 @@
+{
+  "name": "MyRAG",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Upload Files",
+        "formDescription": "Upload Files",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Files",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf, .md, .csv"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        60
+      ],
+      "id": "5d63f995-1586-4c4e-a88c-07a28c8ecdde",
+      "name": "On form submission",
+      "webhookId": "4b0bdabb-0156-4f82-8c81-67fca7f965d4"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "fred",
+          "mode": "list",
+          "cachedResultName": "fred"
+        },
+        "embeddingBatchSize": 64,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        0
+      ],
+      "id": "ce11f953-4167-4b86-843c-a5161ee43bc9",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "iY6Lwsmku9xQdACG",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        540,
+        360
+      ],
+      "id": "ab135724-ca99-474a-bfcf-d3201fd7c0e1",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file",
+                "value": "={{ $json.Files[0].filename }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        660,
+        200
+      ],
+      "id": "456d3dad-0213-4204-bb93-95b0408b537f",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 800,
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        800,
+        360
+      ],
+      "id": "0ed89ed4-4e0d-4335-92c3-10d00416b9ad",
+      "name": "Recursive Character Text Splitter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "182877aa-fe38-4ff6-a29f-7613fd7d68f1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0d565854921eeae02e02c830b7ca9129b767b96f301ef1f4a0ce3dea9231efa"
+  },
+  "id": "wTgeIqDKxDevyDR5",
+  "tags": [
+    {
+      "createdAt": "2025-05-11T04:59:01.382Z",
+      "updatedAt": "2025-05-11T04:59:01.382Z",
+      "id": "zyJS4hsYgerWJhdu",
+      "name": "RAG"
+    }
+  ]
+}

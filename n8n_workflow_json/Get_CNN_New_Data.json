@@ -1,0 +1,690 @@
+{
+  "name": "Get CNN New Data",
+  "nodes": [
+    {
+      "parameters": {
+        "fieldToSplitOut": "url",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        880,
+        160
+      ],
+      "id": "f1aaa305-7a0d-4403-8fcd-946e487a7d5d",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "cnnnews",
+          "mode": "list",
+          "cachedResultName": "cnnnews"
+        },
+        "embeddingBatchSize": 5000,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        3420,
+        140
+      ],
+      "id": "22563cdc-88d4-4a28-9804-85ac0d11a49c",
+      "name": "Qdrant Vector Store",
+      "alwaysOutputData": true,
+      "credentials": {
+        "qdrantApi": {
+          "id": "iY6Lwsmku9xQdACG",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3240,
+        460
+      ],
+      "id": "8fafd029-9ee1-4730-bb6b-fd4721705f51",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "insert-datetime",
+                "value": "={{ new Date().toISOString() }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        3480,
+        440
+      ],
+      "id": "e0108aff-2dbc-4ff8-b5f1-43c18a54e7be",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 5000,
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        3580,
+        620
+      ],
+      "id": "e25deb92-fd62-4333-ae65-4173f6b39d7b",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 * * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        -260
+      ],
+      "id": "8a9fdf01-fc33-4cf8-b5bd-b2174c7989a2",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2440,
+        160
+      ],
+      "id": "79e09d39-d790-471f-bcdc-afac8e1d7f8b",
+      "name": "Wait",
+      "webhookId": "a66b0880-1d64-459f-ab01-6fd3c49f554c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://qdrant:6333/collections/cnnnews/points/delete",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"filter\": {\n    \"must\": [\n      {\n        \"key\": \"metadata.insert-datetime\",\n        \"range\": {\n          \"lt\": \"{{ $json.delelte_time }}\"\n        }\n      }\n    ]\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        -340
+      ],
+      "id": "554eb3e2-ee5d-4d1b-8602-b0aeb3863954",
+      "name": "Clean CNN Vector Store point ( More than 3 Day )"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import datetime\nimport json\n\n# 計算一小時前的 UTC 時間\none_hour_ago = datetime.datetime.utcnow() - datetime.timedelta(days=3)\niso_time = one_hour_ago.replace(microsecond=0).isoformat() + \"Z\"\n\n\nreturn [\n    { \"json\": { \"delelte_time\": iso_time } }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        -300
+      ],
+      "id": "7baa92d5-b187-4fe3-a20c-d3842dea8c35",
+      "name": "Get 3 Days dateTime"
+    },
+    {
+      "parameters": {
+        "url": "https://edition.cnn.com/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        -100
+      ],
+      "id": "cab9c083-c65a-452b-9e84-dea9ad03901b",
+      "name": "Get CNN News html Source Code"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "news_url",
+              "cssSelector": "div[data-component-name=\"card\"] a.container__link--type-article",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {
+          "trimValues": true
+        }
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        160
+      ],
+      "id": "9d089cab-e50c-4828-8a8c-822c0a9fac01",
+      "name": "Paser for get News URLs",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "links_tmp = items[0][\"json\"][\"news_url\"]\nbase_url = \"https://edition.cnn.com\"\n\nlinks = []\ndates = []\nfor l in links_tmp:\n  if l not in links and l[:3]==\"/20\":\n    links.append(l)\n    dates.append(l[1:11].replace('/', '-'))\n\nreturn [\n    { \"json\": { \"id\": id, \"date\": date, \"url\": base_url + link } }\n    for link, date, id in zip(links, dates, range(len(links)))\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        160
+      ],
+      "id": "7e762ef0-a52c-49f5-9e91-effc063b01e0",
+      "name": "Add base url to urls"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1140,
+        100
+      ],
+      "id": "4094afdb-8433-4ad9-b085-4013d2d8da15",
+      "name": "Loop to get each News URL Data to Vector Store"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        180
+      ],
+      "id": "10b717ee-36f8-410d-a883-c1c77e438ca9",
+      "name": "Get HTML SourceCode",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "news_title",
+              "cssSelector": "#maincontent",
+              "returnArray": true
+            },
+            {
+              "key": "news_content",
+              "cssSelector": "div.article__content",
+              "returnArray": true
+            },
+            {
+              "key": "news_img",
+              "cssSelector": "div.image__container > picture.image__picture img",
+              "returnValue": "attribute",
+              "attribute": "src"
+            }
+          ]
+        },
+        "options": {
+          "trimValues": true
+        }
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1580,
+        140
+      ],
+      "id": "e87b7ece-8cd1-4305-a4a8-4e3357b60b42",
+      "name": "Parser to get News Data ( Title, Content... )",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1800,
+        40
+      ],
+      "id": "ad19428c-12d1-4c3a-ae68-77edcdac728c",
+      "name": "Merge Datas"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://qdrant:6333/collections/cnnnews/points/scroll ",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n    \"limit\": 1000,\n    \"with_payload\": true,\n    \"with_vector\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2060,
+        140
+      ],
+      "id": "52f89782-f899-43a3-8616-c1722b0fe988",
+      "name": "Check VectorStore if Title not in VectorStore",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "points = items[0][\"json\"][\"result\"][\"points\"]\nnews_title = _('Merge Datas').first()['json']['news_title'][0].split('\\n')[0]\n\npoint_count = 0\nfor point in points:\n  title = point[\"payload\"].get(\"metadata\", {}).get(\"title\", [\"\"])[0]\n  if news_title in title:\n    point_count = 12\n    break\n  \nreturn [{\"point_count\": point_count}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2260,
+        140
+      ],
+      "id": "93d50429-d2f9-4e97-a882-6ec53581466a",
+      "name": "Return Check Result"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        2680,
+        60
+      ],
+      "id": "33761f21-a867-4b6f-b3a5-7079c2c1a559",
+      "name": "Merge Datas (Check Result)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "51876d72-e65e-49e9-b500-54413705a845",
+              "leftValue": "={{ $json.point_count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2860,
+        160
+      ],
+      "id": "ef3f888c-9a50-4c2d-9727-15a00bdadd2a",
+      "name": "If point count equal 0 than put data into Vector Store"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import re\n\nitem = items[0]\n\n# 強制把 JsProxy 轉成純文字\nraw_content = str(item['json'].get(\"news_content\", \"\"))\n\n# 正則去除圖片與連結格式\nnews_text = re.sub(r'\\[\\/images\\/.*?\\.gif\\]|\\[http[^\\]]+\\]', '', raw_content)\n\nnews_date_time_tmp = item['json'].get(\"url\", \"\").split('/')\nnews_date_time = '-'.join([news_date_time_tmp[3], news_date_time_tmp[4], news_date_time_tmp[5]])\n\nreturn [\n    {\n        \"json\": {\n            \"title\": item[\"json\"].get(\"news_title\", \"\"),\n            \"text\": f\"\"\"\nNews Name: {item['json'].get(\"news_title\", \"\")}\ndate-time: {news_date_time}\n<{item['json'].get(\"news_title\", \"\")}> News Picture: {item['json'].get(\"news_img\", \"\").split('?')[0]}\n<{item['json'].get(\"news_title\", \"\")}> News Content: {news_text}\n<{item['json'].get(\"news_title\", \"\")}> New url: {item['json'].get(\"url\", \"\")}\n\"\"\"\n        }\n    }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3140,
+        140
+      ],
+      "id": "ed4b0055-79dc-42b4-b9bd-f5d6da834e5f",
+      "name": "Json to Text",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop to get each News URL Data to Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get CNN News html Source Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get 3 Days dateTime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Loop to get each News URL Data to Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Merge Datas (Check Result)",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get 3 Days dateTime": {
+      "main": [
+        [
+          {
+            "node": "Clean CNN Vector Store point ( More than 3 Day )",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get CNN News html Source Code": {
+      "main": [
+        [
+          {
+            "node": "Paser for get News URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paser for get News URLs": {
+      "main": [
+        [
+          {
+            "node": "Add base url to urls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add base url to urls": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop to get each News URL Data to Vector Store": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get HTML SourceCode",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Datas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get HTML SourceCode": {
+      "main": [
+        [
+          {
+            "node": "Parser to get News Data ( Title, Content... )",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser to get News Data ( Title, Content... )": {
+      "main": [
+        [
+          {
+            "node": "Merge Datas",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Datas": {
+      "main": [
+        [
+          {
+            "node": "Check VectorStore if Title not in VectorStore",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Datas (Check Result)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check VectorStore if Title not in VectorStore": {
+      "main": [
+        [
+          {
+            "node": "Return Check Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Check Result": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Datas (Check Result)": {
+      "main": [
+        [
+          {
+            "node": "If point count equal 0 than put data into Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If point count equal 0 than put data into Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Json to Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop to get each News URL Data to Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json to Text": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b37dfe6c-f806-4380-91f6-8a71500d1889",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0d565854921eeae02e02c830b7ca9129b767b96f301ef1f4a0ce3dea9231efa"
+  },
+  "id": "cW2diK5V2lS7Vleu",
+  "tags": [
+    {
+      "createdAt": "2025-05-11T04:59:01.382Z",
+      "updatedAt": "2025-05-11T04:59:01.382Z",
+      "id": "zyJS4hsYgerWJhdu",
+      "name": "RAG"
+    }
+  ]
+}

@@ -1,0 +1,689 @@
+{
+  "name": "Get Movie Data",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://www.atmovies.com.tw/movie/next/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        -100
+      ],
+      "id": "2e625f9f-a324-40ff-9634-8a846dc851cc",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "links",
+              "cssSelector": "ul.filmListAllX > li > a:nth-child(1)",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            },
+            {
+              "key": "img",
+              "cssSelector": "ul.filmListAllX > li > a:nth-child(1) > img",
+              "returnValue": "attribute",
+              "attribute": "src",
+              "returnArray": true
+            },
+            {
+              "key": "title",
+              "cssSelector": "ul.filmListAllX > li > a:nth-child(1) > img",
+              "returnValue": "attribute",
+              "attribute": "alt",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {
+          "trimValues": true
+        }
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        160
+      ],
+      "id": "abb0845a-e204-48a1-afda-25f25d0f07ae",
+      "name": "HTML",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "links = items[0][\"json\"][\"links\"]\nbase_url = \"https://www.atmovies.com.tw\"\nimgs = items[0][\"json\"][\"img\"]\ntitles = items[0][\"json\"][\"title\"]\n\nreturn [\n    { \"json\": { \"id\": id, \"title\": title, \"url\": base_url + link, \"image\": img } }\n    for link, img, title, id in zip(links, imgs, titles, range(len(titles)))\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        160
+      ],
+      "id": "703e7c17-b30b-49f2-a28a-30a83f75c880",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1460,
+        180
+      ],
+      "id": "e2720139-9170-4254-bd15-b6398f07cfb9",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        520
+      ],
+      "id": "f7cfcab3-a0e6-4ad0-92f1-3c2ad660145b",
+      "name": "HTTP Request1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "youtube",
+              "cssSelector": "div.video_view > iframe",
+              "returnValue": "attribute",
+              "attribute": "src",
+              "returnArray": true
+            },
+            {
+              "key": "description",
+              "cssSelector": "#main > div > div.\\39 u.\\31 2u\\(mobile\\).important\\(mobile\\) > div > div:nth-child(5),\n#main > div > div.\\39 u.\\31 2u\\(mobile\\).important\\(mobile\\) > div > div:nth-child(6)",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {
+          "trimValues": true
+        }
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1180,
+        300
+      ],
+      "id": "cf1357af-4330-4b0e-afef-ee50adfaf558",
+      "name": "HTML1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "url",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        880,
+        300
+      ],
+      "id": "e5d71961-83cb-41f3-888c-d69508bc8be2",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import re\n\nresults = []\nid = 0\nfor i in items:\n    yt_arr = i[\"json\"].get(\"youtube\", [])\n    desc_arr = i[\"json\"].get(\"description\", [])\n\n    youtube = yt_arr[0] if yt_arr else \"\"\n    description = re.sub(r'\\n\\[http[^\\]]+\\]|\\[/images/.*?\\.gif\\]|\\[http[^\\]]+\\]', '', desc_arr[0]) if desc_arr else \"\"\n\n\n\n    results.append({\n        \"json\": {\n            \"id\": id,\n            \"youtube\": youtube,\n            \"description\": description\n        }\n\n    })\n    id += 1\nreturn results"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        540
+      ],
+      "id": "6f850d69-fb23-4d88-8fc2-9b24871f875c",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "return [\n    {\n        \"json\": {\n            \"title\": item[\"json\"][\"title\"],\n        \"text\": f\"\"\"\nMovie Name: <<{item[\"json\"].get(\"title\", \"\")}>>\n{item[\"json\"].get(\"title\", \"\")} Movie Picture: <<{item[\"json\"].get(\"image\", \"\")}>>\n{item[\"json\"].get(\"title\", \"\")} Youtube Link: <<{item[\"json\"].get(\"youtube\", \"\")}>>\n{item[\"json\"].get(\"title\", \"\")} Introduction url: <<{item[\"json\"].get(\"url\", \"\")}>>\n{item[\"json\"].get(\"title\", \"\")} Description: {item[\"json\"].get(\"description\", \"\")}\n\"\"\"\n        }\n    }\n    for item in items\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        80
+      ],
+      "id": "0cbaab26-8da0-4ca9-b5b1-3e06d3a9df47",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "movie",
+          "mode": "list",
+          "cachedResultName": "movie"
+        },
+        "embeddingBatchSize": 1000,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        2280,
+        0
+      ],
+      "id": "65e49019-50ca-4773-934a-48d3c310778c",
+      "name": "Qdrant Vector Store",
+      "alwaysOutputData": true,
+      "credentials": {
+        "qdrantApi": {
+          "id": "iY6Lwsmku9xQdACG",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2180,
+        300
+      ],
+      "id": "1a7f1c62-9d5f-4d5d-b2ae-2d42f2d61eb3",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "insert-datetime",
+                "value": "={{ new Date().toISOString() }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        200
+      ],
+      "id": "7e8dbbc8-11cd-45f2-92a1-7cca7534e6ac",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 800,
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        2500,
+        380
+      ],
+      "id": "05be76f5-e840-498e-aa78-64c6da3d6048",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "\nmovieList = ','.join([item[\"json\"][\"title\"] for item in items])\n\nreturn [\n    {\n        \"json\": {\n            \"movie-list\": movieList,\n        }\n    }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        300
+      ],
+      "id": "eb30244c-96eb-4c48-beaf-84049d7b0dd6",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "movie",
+          "mode": "list",
+          "cachedResultName": "movie"
+        },
+        "embeddingBatchSize": 1000,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        2280,
+        580
+      ],
+      "id": "3656c475-4088-4801-9ad5-bd46d6b776bd",
+      "name": "Qdrant Vector Store1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "qdrantApi": {
+          "id": "iY6Lwsmku9xQdACG",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2180,
+        880
+      ],
+      "id": "5811c33a-3f72-4e7f-9b34-02bbf1a2a22d",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "wLPOrkzEhJji5Ha9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "title",
+                "value": "new-movie-list"
+              },
+              {
+                "name": "insert-datetime",
+                "value": "={{ new Date().toISOString() }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        780
+      ],
+      "id": "d725cb37-0de1-4759-978b-906b0e25f531",
+      "name": "Default Data Loader1"
+    },
+    {
+      "parameters": {
+        "chunkSize": 800,
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        2500,
+        960
+      ],
+      "id": "f06d1c40-fd74-4591-a75b-e07c6cccb3bd",
+      "name": "Recursive Character Text Splitter1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 * * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1a824e37-61d4-4950-a29a-82215fbcdc2c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://qdrant:6333/collections/movie/points/delete",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"filter\": {\n    \"must\": [\n      {\n        \"key\": \"metadata.insert-datetime\",\n        \"range\": {\n          \"lt\": \"{{ $json.delelte_time }}\"\n        }\n      }\n    ]\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3340,
+        60
+      ],
+      "id": "2dfb5cf2-3430-421f-a57f-37720cb16ffa",
+      "name": "Clean Fred Collection"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import datetime\nimport json\n\n# 計算一小時前的 UTC 時間\none_hour_ago = datetime.datetime.utcnow() - datetime.timedelta(minutes=30)\niso_time = one_hour_ago.replace(microsecond=0).isoformat() + \"Z\"\n\n\nreturn [\n    { \"json\": { \"delelte_time\": iso_time } }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2820,
+        40
+      ],
+      "id": "ae732682-0bb2-4291-a9db-32081da39818",
+      "name": "Code4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter1": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Fred Collection": {
+      "main": [
+        []
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "main": [
+        []
+      ]
+    },
+    "Qdrant Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Clean Fred Collection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c249bfd2-1aeb-4880-8db0-0b515d35e8d1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0d565854921eeae02e02c830b7ca9129b767b96f301ef1f4a0ce3dea9231efa"
+  },
+  "id": "v4q8W2sOylkq7l4f",
+  "tags": [
+    {
+      "createdAt": "2025-05-11T04:59:01.382Z",
+      "updatedAt": "2025-05-11T04:59:01.382Z",
+      "id": "zyJS4hsYgerWJhdu",
+      "name": "RAG"
+    }
+  ]
+}

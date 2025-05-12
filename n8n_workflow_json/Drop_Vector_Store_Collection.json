@@ -1,0 +1,75 @@
+{
+  "name": "Drop Vector Store Collection",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -60
+      ],
+      "id": "af2e2493-7af2-4082-ae9a-9668e4636ca7",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://qdrant:6333/collections/cnnnews/points/delete",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"filter\": {\n    \"must\": []\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        60
+      ],
+      "id": "36260df8-f94f-42b0-b372-787c6bfe9c9b",
+      "name": "Clean Fred Collection"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Clean Fred Collection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "aabaca56-1169-42d7-82af-ec55d3a3076b",
+  "meta": {
+    "instanceId": "b0d565854921eeae02e02c830b7ca9129b767b96f301ef1f4a0ce3dea9231efa"
+  },
+  "id": "7xqWyE8xmIwHEZi2",
+  "tags": [
+    {
+      "createdAt": "2025-05-11T04:58:23.794Z",
+      "updatedAt": "2025-05-11T04:58:23.794Z",
+      "id": "J8MCGsnJwa8nxmXD",
+      "name": "Drop Vector Store Data"
+    }
+  ]
+}
