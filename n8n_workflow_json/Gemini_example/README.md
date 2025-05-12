@@ -1,14 +1,11 @@
-# n8n_test
+# Gemini Example
 
-### Gemini Example
+## Workflow for Line Bot && AI Agent
+![Gemini_ai_agent](image/n8n_ex2.png)
 ---
-![Gemini_example](image/n8n_ex2.png)
-
-### OpenAI Example
+## Workflow for RAG
+![gemini_RAG](image/n8n_ex3.png)
 ---
-![OpenAI_example](image/n8n_ex5.png)
 
-
-### n8n for Gitlab
----
-![Gitlab](image/n8n_ex1.png)
+## Workflow for drop point from Vector Store Collection
+![drop_points](image/n8n_ex4.png)
