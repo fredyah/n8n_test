@@ -1,9 +1,9 @@
 # OpenAI Example
 
-## Workflow for Discord Bot && AI Agent
+## Workflow for Discord Bot && AI Agent (gpt-4.1-nano)
 ![OpenAI_agent](image/n8n_ex5.png)
 ---
-## Workflow for RAG
+## Workflow for RAG ( text-embedding-3-small )
 ### Work flow for crawl from CNN News ( httpRequest, Html Parse)
 ![RAG_example_1](image/n8n_ex6.png)
 ---

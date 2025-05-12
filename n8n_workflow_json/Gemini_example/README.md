@@ -1,9 +1,9 @@
 # Gemini Example
 
-## Workflow for Line Bot && AI Agent
+## Workflow for Line Bot && AI Agent ( gemini-1.5-flash )
 ![Gemini_ai_agent](image/n8n_ex2.png)
 ---
-## Workflow for RAG
+## Workflow for RAG ( text-embedding-004 )
 ![gemini_RAG](image/n8n_ex3.png)
 ---
 
